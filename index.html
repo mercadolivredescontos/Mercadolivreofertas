@@ -135,13 +135,16 @@
 
         /* Etapa de Pagamento PIX */
         .pix-payment-container { text-align: center; }
-        .pix-payment-container .qr-code-placeholder {
+        .qr-code-placeholder {
             width: 200px; height: 200px;
-            background-color: #f0f0f0;
             margin: 16px auto;
             display: flex; align-items: center; justify-content: center;
-            color: #ccc; font-size: 18px;
             border: 1px solid #ddd;
+        }
+        .qr-code-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .pix-code-container {
             background-color: #f5f5f5;
@@ -226,6 +229,28 @@
         .card-section { padding: 24px 16px; border-bottom: 1px solid var(--ml-cinza-fundo); }
         .card-section:last-child { border-bottom: none; }
         .card-title { font-size: 18px; font-weight: 400; margin: 0 0 24px 0; }
+
+        /* Estilos para a nova seção de descrição */
+        .description-section p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--ml-cinza-escuro);
+        }
+        .description-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+        .description-section th, .description-section td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .description-section th {
+            background-color: #f2f2f2;
+            font-weight: 500;
+        }
 
         /* --- Galeria de Imagens (Carrossel com Swipe) --- */
         .gallery-section { padding: 0; }
@@ -388,8 +413,8 @@
                 <label for="person-cpf-input" class="form-label">CPF</label>
                 <div class="form-error-message" id="person-cpf-error"></div>
             </div>
-            <div class="form-group"> 
-              <input type="email" id="person-email-input" class="form-input" placeholder=" ">
+            <div class="form-group">
+                <input type="email" id="person-email-input" class="form-input" placeholder=" ">
                 <label for="person-email-input" class="form-label">E-mail</label>
                 <div class="form-error-message" id="person-email-error"></div>
             </div>
@@ -401,7 +426,9 @@
             <h1>Pague com Pix</h1>
             <div class="pix-payment-container">
                 <p>Escaneie o QR code ou copie o código para pagar.</p>
-                <div class="qr-code-placeholder">QR Code</div>
+                <div class="qr-code-placeholder">
+                    <img src="https://i.imgur.com/Pgo60qN.jpeg" alt="QR Code para pagamento Pix">
+                </div>
                 <p><strong>Total: R$ 9.000,00</strong></p>
                 <div class="pix-code-container" id="pix-code">
                     00020126510014BR.GOV.BCB.PIX0129autopecadesmanche24@gmail.com52040000530398654079000.005802BR5922COMERCIO AUTO DESMONTE6011CRED DETRAN62200516MOTORJEEPCOMPASS6304B2BF
@@ -413,7 +440,8 @@
             </div>
         </div>
     </div>
-        <!-- TELA PRINCIPAL DO PRODUTO -->
+
+    <!-- TELA PRINCIPAL DO PRODUTO -->
     <div class="page-section" id="product-screen">
         <!-- Modal de CEP (da página principal) -->
         <div class="cep-modal-overlay" id="cep-modal-overlay">
@@ -459,12 +487,12 @@
             <section class="gallery-section">
                 <div class="gallery-container" id="gallery-container">
                     <div class="gallery-track" id="gallery-track">
-                        <!-- IMAGENS PRONTAS PARA VOCÊ COLAR O LINK -->
-                        <div class="image-slide"><img class="main-image-placeholder" src="https://img.olx.com.br/images/23/234527453813242.jpg" alt="Imagem 1 do Produto"></div>
-                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_905062-MLA92148496583_092025-B.webp" alt="Imagem 2 do Produto"></div>
-                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_608213-MLA92148476745_092025-B.webp" alt="Imagem 3 do Produto"></div>
-                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_805948-MLA91747611572_092025-B.webp" alt="Imagem 4 do Produto"></div>
-                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_663681-MLA91747591844_092025-B.webp" alt="Imagem 5 do Produto"></div>
+                        <!-- IMAGENS DO PRODUTO ATUALIZADAS -->
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://i.imgur.com/iLg6rrl.jpeg" alt="Imagem 1 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://i.imgur.com/Bv8bzKn.jpeg" alt="Imagem 2 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://i.imgur.com/5AyrMuZ.jpeg" alt="Imagem 3 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://i.imgur.com/hOogCWV.jpeg" alt="Imagem 4 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://i.imgur.com/i8yb0pB.jpeg" alt="Imagem 5 do Produto"></div>
                     </div>
                 </div>
                 <div class="gallery-dots" id="gallery-dots">
@@ -494,7 +522,60 @@
             <button class="btn btn-buy" id="buy-now-btn">Comprar agora</button>
             <button class="btn btn-add-to-cart" id="add-to-cart-btn">Adicionar ao carrinho</button>
         </section>
+
         <div class="main-container">
+            <!-- SEÇÃO DE DESCRIÇÃO DO PRODUTO ADICIONADA -->
+            <section class="card-section description-section">
+                <h2 class="card-title">Descrição do Produto</h2>
+                <p>O motor 2.0 Tigershark Flex é um motor aspirado de quatro cilindros em linha, 16 válvulas, que a FCA (agora parte da Stellantis) modificou para se tornar bicombustível no mercado brasileiro.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Atributo</th>
+                            <th>Especificação (Etanol)</th>
+                            <th>Especificação (Gasolina)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Tipo de Motor</td>
+                            <td>2.0 Tigershark Flex, 4 cilindros em linha, 16V</td>
+                            <td>2.0 Tigershark Flex, 4 cilindros em linha, 16V</td>
+                        </tr>
+                        <tr>
+                            <td>Potência Máxima</td>
+                            <td>166 cv</td>
+                            <td>159 cv</td>
+                        </tr>
+                        <tr>
+                            <td>Torque Máximo</td>
+                            <td>20,5 kgfm</td>
+                            <td>19,9 kgfm</td>
+                        </tr>
+                        <tr>
+                            <td>Transmissão</td>
+                            <td>Automática Aisin de 6 marchas</td>
+                            <td>Automática Aisin de 6 marchas</td>
+                        </tr>
+                        <tr>
+                            <td>Tração</td>
+                            <td>Dianteira (4x2)</td>
+                            <td>Dianteira (4x2)</td>
+                        </tr>
+                        <tr>
+                            <td>Aceleração 0-100 km/h</td>
+                            <td>Cerca de 10,6 segundos</td>
+                            <td>N/D</td>
+                        </tr>
+                         <tr>
+                            <td>Velocidade Máxima</td>
+                            <td colspan="2">N/D</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Motor possui nota fiscal, baixa no DETRAN, garantia de 12 meses (1 ano).</p>
+            </section>
+
             <section class="card-section seller-section">
                 <h2 class="card-title">Informações da loja</h2>
                 <div class="seller-info">
@@ -585,29 +666,7 @@
             </section>
         </div>
 
-        <section class="recommendations-section">
-            <h2 class="card-title">Quem comprou este produto também comprou</h2>
-            <div class="product-grid">
-                <a href="#" class="reco-product">
-                    <div class="reco-image-placeholder"></div>
-                    <div class="price">R$ 220</div>
-                    <div class="installments">10x R$ 22,00 sem juros</div>
-                    <div class="title">All star 2023</div>
-                </a>
-                <a href="#" class="reco-product">
-                  <div class="reco-image-placeholder"></div>
-                    <div class="price">R$ 380</div>
-                    <div class="installments">10x R$ 38,00 sem juros</div>
-                    <div class="title">AOKULASIC-Relógio de pulso de quartzo</div>
-                </a>
-                <a href="#" class="reco-product">
-                    <div class="reco-image-placeholder"></div>
-                    <div class="price">R$ 89</div>
-                    <div class="installments">em 3x R$ 29,67 sem juros</div>
-                    <div class="title">Fone de Ouvido Bluetooth Sem Fio</div>
-                </a>
-            </div>
-        </section>
+        <!-- SEÇÃO DE RECOMENDAÇÕES REMOVIDA -->
 
         <div class="ad-info">
             <span>Anúncio #3505329610</span> | <a href="#">Denunciar</a>
@@ -795,7 +854,7 @@
                 loadingScreen.classList.add('hidden');
                 if (callback) callback();
             }, duration);
-          }
+        }
 
         function showStep(stepId) {
             Object.values(checkoutSteps).forEach(step => step.classList.add('hidden'));
@@ -810,8 +869,7 @@
         }
 
         buyNowBtn.addEventListener('click', () => {
-            showLoading(2000, () => {
-                productScreen.classList.add('hidden');
+            showLoading(2000, () => {                productScreen.classList.add('hidden');
                 checkoutScreen.classList.remove('hidden');
                 body.classList.add('checkout-active');
                 showStep('cep');
@@ -895,7 +953,7 @@
             navigator.clipboard.writeText(pixCode).then(() => {
                 copyCodeBtn.textContent = 'Código Copiado!';
                 setTimeout(() => {
-                    copyCodeBtn.textContent = 'Copiar código';
+                    copyCodeeBtn.textContent = 'Copiar código';
                 }, 2000);
             });
         });
