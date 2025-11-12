@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Clone Fiel - A Versão Final++</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --ml-amarelo: #FFF159;
+            --ml-preto: #333;
+            --ml-cinza-escuro: #666;
+            --ml-cinza-claro: #999;
+            --ml-cinza-fundo: #EBEBEB;
+            --ml-azul: #3483FA;
+            --ml-verde: #00A650;
+            --ml-branco: #FFF;
+            --ml-preto-banner: #222;
+            --fonte-principal: 'Roboto', sans-serif;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--fonte-principal);
+            color: var(--ml-preto);
+            -webkit-font-smoothing: antialiased;
+            background-color: var(--ml-cinza-fundo);
+        }
+        
+        body.checkout-active {
+            background-color: var(--ml-branco);
+        }
+
+        *, *:before, *:after { box-sizing: inherit; }
+        a { text-decoration: none; color: inherit; }
+
+        .page-section { display: block; }
+        .page-section.hidden { display: none; }
+
+        /* --- TELA DE CARREGAMENTO (AMARELA) --- */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--ml-amarelo);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--ml-azul);
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- TELA DE CHECKOUT PROFISSIONAL --- */
+        .checkout-flow-header {
+            background-color: var(--ml-amarelo);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid #f0e59a;
+            position: sticky; top: 0; z-index: 10;
+        }
+        .checkout-flow-header img { height: 28px; }
+        .progress-bar {
+            width: 100%;
+            background-color: #f0e59a;
+            height: 4px;
+        }
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background-color: var(--ml-azul);
+            transition: width 0.5s ease;
+        }
+        .checkout-step {
+            padding: 24px 16px;
+            background-color: var(--ml-branco);
+        }
+        .checkout-step.hidden { display: none; }
+        .checkout-step h1 { font-size: 24px; font-weight: 400; margin: 0 0 32px 0; }
+        
+        .form-group { position: relative; margin-bottom: 24px; }
+        .form-input {
+            width: 100%;
+            padding: 16px 12px 8px 12px;
+            border: 1px solid var(--ml-cinza-claro);
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: var(--ml-branco);
+        }
+        .form-input:focus { border-color: var(--ml-azul); outline: none; }
+        .form-input:disabled { background-color: #f5f5f5; color: var(--ml-cinza-escuro); }
+        .form-label {
+            position: absolute;
+            left: 13px;
+            top: 13px;
+            font-size: 16px;
+            color: var(--ml-cinza-claro);
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+        .form-input:focus + .form-label,
+        .form-input:not(:placeholder-shown) + .form-label {
+            top: 6px;
+            font-size: 12px;
+            color: var(--ml-azul);
+        }
+        .form-input.error { border-color: #f44336; }
+        .form-input.error + .form-label { color: #f44336; }
+        .form-error-message { color: #f44336; font-size: 12px; margin-top: 4px; height: 16px; }
+        
+        .checkout-step-button {
+            width: 100%; padding: 16px; background-color: var(--ml-azul); color: var(--ml-branco);
+            border: none; border-radius: 6px; font-size: 16px; font-weight: 500; cursor: pointer;
+            margin-top: 16px;
+        }
+        .checkout-step-button:disabled {
+            background-color: #c9c9c9;
+            cursor: not-allowed;
+        }
+
+        /* Etapa de Pagamento PIX */
+        .pix-payment-container { text-align: center; }
+        .pix-payment-container .qr-code-placeholder {
+            width: 200px; height: 200px;
+            background-color: #f0f0f0;
+            margin: 16px auto;
+            display: flex; align-items: center; justify-content: center;
+            color: #ccc; font-size: 18px;
+            border: 1px solid #ddd;
+        }
+        .pix-code-container {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            word-wrap: break-word;
+            font-size: 12px;
+            color: var(--ml-cinza-escuro);
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .copy-code-button {
+            background-color: rgba(52, 131, 250, 0.1);
+            color: var(--ml-azul);
+            border: 1px solid rgba(52, 131, 250, 0.2);
+            width: 100%;
+        }
+        .post-payment-info {
+            font-size: 13px;
+            color: var(--ml-cinza-escuro);
+            margin-top: 24px;
+            line-height: 1.5;
+        }
+        .shipping-info-card {
+            padding: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .shipping-info-card svg { fill: var(--ml-verde); flex-shrink: 0; }
+        .shipping-info-card p { margin: 0; font-size: 14px; line-height: 1.4; }
+        .shipping-info-card .free-shipping { color: var(--ml-verde); font-weight: 500; }
+
+
+        /* --- Modal de CEP (da página principal) --- */
+        .cep-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); display: none;
+            align-items: center; justify-content: center; z-index: 1000;
+        }
+        .cep-modal-content {
+            background-color: var(--ml-branco); padding: 24px; border-radius: 8px;
+            width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .cep-modal-content h3 { font-size: 18px; font-weight: 500; margin: 0 0 16px 0; }
+        .cep-modal-input {
+            width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 16px; margin-bottom: 8px;
+        }
+        .cep-modal-input.error { border-color: #f44336; }
+        .cep-error-message { color: #f44336; font-size: 12px; height: 16px; margin-bottom: 8px; }
+        .cep-modal-button {
+            width: 100%; padding: 14px; background-color: var(--ml-azul); color: var(--ml-branco);
+            border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer;
+        }
+
+        /* --- Cabeçalhos da Página Principal --- */
+        .app-banner { background-color: var(--ml-preto-banner); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .app-banner-content { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+        .app-banner-icon { width: 38px; height: 38px; border-radius: 6px; flex-shrink: 0; }
+        .app-text .title { font-size: 14px; font-weight: 500; color: var(--ml-branco); margin: 0; }
+        .install-button { background-color: var(--ml-azul); color: var(--ml-branco); border: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; flex-shrink: 0; }
+
+        .header-amarelo { background-color: var(--ml-amarelo); padding: 8px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .header-content { display: flex; align-items: center; gap: 16px; }
+        .ml-logo { width: 44px; height: 32px; flex-shrink: 0; object-fit: contain; }
+        .search-bar { flex-grow: 1; position: relative; }
+        .search-input { width: 100%; padding: 12px 16px 12px 45px; border: none; border-radius: 4px; font-size: 15px; background-color: var(--ml-branco); }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); fill: var(--ml-cinza-claro); }
+        .cart-container { position: relative; cursor: pointer; }
+        .cart-icon { fill: var(--ml-preto); flex-shrink: 0; }
+        .cart-count { position: absolute; top: -5px; right: -8px; background-color: var(--ml-azul); color: var(--ml-branco); border-radius: 50%; width: 16px; height: 16px; font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; }
+        .cep-bar { background-color: var(--ml-amarelo); padding: 8px 16px; cursor: pointer; }
+        .cep-content { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ml-cinza-escuro); }
+        .cep-icon { fill: var(--ml-preto); }
+
+        /* --- Corpo Principal --- */
+        .main-container { background-color: var(--ml-branco); }
+        .card-section { padding: 24px 16px; border-bottom: 1px solid var(--ml-cinza-fundo); }
+        .card-section:last-child { border-bottom: none; }
+        .card-title { font-size: 18px; font-weight: 400; margin: 0 0 24px 0; }
+
+        /* --- Galeria de Imagens (Carrossel com Swipe) --- */
+        .gallery-section { padding: 0; }
+        .gallery-container { overflow: hidden; width: 100%; cursor: grab; }
+        .gallery-track { display: flex; width: 500%; /* 100% * 5 slides */ }
+        .image-slide { width: 20%; /* 100% / 5 slides */ }
+        .main-image-placeholder {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #ccc;
+            user-select: none;
+            object-fit: cover; /* Garante que a imagem preencha o espaço sem distorcer */
+        }
+        .gallery-dots { text-align: center; padding: 12px 0; }
+        .dot { height: 8px; width: 8px; margin: 0 4px; background-color: #ccc; border-radius: 50%; display: inline-block; cursor: pointer; }
+        .dot.active { background-color: var(--ml-azul); }
+        
+        .title-section .product-title { font-size: 18px; font-weight: 400; line-height: 1.3; margin: 0; }
+        .price-section .original-price { font-size: 14px; text-decoration: line-through; color: var(--ml-cinza-claro); }
+        .price-section .price-line { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+        .price-section .current-price { font-size: 32px; font-weight: 300; }
+        .price-section .discount { font-size: 14px; color: var(--ml-verde); font-weight: 500; }
+        .price-section .installments { font-size: 16px; color: var(--ml-verde); margin-top: 2px; }
+        .action-buttons-section { padding: 16px; background-color: var(--ml-cinza-fundo); display: grid; gap: 8px; }
+        .btn { padding: 14px; border-radius: 6px; border: none; font-size: 15px; font-weight: 500; cursor: pointer; text-align: center; }
+        .btn-buy { background-color: var(--ml-azul); color: var(--ml-branco); }
+        .btn-add-to-cart { background-color: rgba(52, 131, 250, 0.1); color: var(--ml-azul); }
+        
+        .seller-section .seller-info { display: flex; align-items: center; gap: 16px; }
+        .seller-logo-placeholder {
+            width: 48px; height: 48px;
+            border: 1px solid #EFEFEF;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; /* Garante que a imagem não saia do círculo */
+        }
+        .seller-logo-placeholder img {
+            width: 100%; height: 100%;
+            object-fit: cover; /* Garante que a imagem cubra o círculo sem distorcer */
+        }
+        .shop-name { font-size: 14px; margin: 0; }
+        .leader-badge { font-size: 13px; color: var(--ml-verde); display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .leader-icon { fill: var(--ml-verde); }
+
+        .questions-section .suggestion-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+        .questions-section .suggestion-btn { background-color: rgba(52, 131, 250, 0.1); color: var(--ml-azul); border: none; padding: 8px 12px; border-radius: 4px; font-size: 13px; }
+
+        .reviews-section .star-icon { fill: var(--ml-azul); }
+        .reviews-section .reviews-summary { display: flex; gap: 24px; align-items: center; }
+        .reviews-summary .avg-rating { font-size: 48px; font-weight: 300; }
+        .reviews-summary .stars { display: flex; }
+        .reviews-summary .star-icon { width: 20px; height: 20px; }
+        .reviews-summary .total-reviews { font-size: 14px; color: var(--ml-cinza-escuro); }
+        .rating-bars { flex-grow: 1; }
+        .rating-bar-row { display: flex; align-items: center; gap: 8px; }
+        .rating-bar-row .star-label { font-size: 13px; color: var(--ml-cinza-escuro); }
+        .rating-bar-row .bar-container { flex-grow: 1; height: 6px; background-color: var(--ml-cinza-fundo); border-radius: 3px; }
+        .rating-bar-row .bar-fill { height: 100%; background-color: var(--ml-cinza-escuro); border-radius: 3px; }
+        .reviews-with-photos { margin-top: 24px; }
+        .review-comment { border-top: 1px solid var(--ml-cinza-fundo); padding-top: 16px; margin-top: 16px; }
+        .review-comment .stars { display: flex; margin-bottom: 8px; }
+        .review-comment .star-icon { width: 16px; height: 16px; }
+        .review-comment .comment-title { font-weight: 500; margin: 0 0 4px 0; }
+        .review-comment .comment-text { font-size: 14px; color: var(--ml-cinza-escuro); line-height: 1.5; }
+        .review-comment .comment-author { font-size: 12px; color: var(--ml-cinza-claro); margin-top: 8px; }
+        .link-azul { font-size: 14px; color: var(--ml-azul); text-decoration: none; display: block; margin-top: 16px; }
+
+        .recommendations-section { background-color: var(--ml-cinza-fundo); padding: 24px 0; }
+        .recommendations-section .card-title { padding: 0 16px; }
+        .recommendations-section .product-grid { display: flex; gap: 16px; overflow-x: auto; padding: 8px 16px; }
+        .reco-product { background-color: var(--ml-branco); border-radius: 6px; padding: 16px; min-width: 220px; text-decoration: none; color: inherit; display: block; }
+        .reco-image-placeholder { width: 100%; aspect-ratio: 1 / 1; border-bottom: 1px solid #EEE; padding-bottom: 16px; margin-bottom: 16px; background-color: #f0f0f0; }
+        .reco-product .price { font-size: 22px; font-weight: 400; margin: 8px 0; }
+        .reco-product .installments { font-size: 14px; color: var(--ml-verde); }
+        .reco-product .title { font-size: 14px; color: var(--ml-preto); margin-top: 8px; }
+        .ad-info { padding: 16px; font-size: 13px; color: var(--ml-cinza-escuro); border-top: 1px solid #ddd; background-color: var(--ml-branco); }
+        .ad-info a { color: var(--ml-azul); }
+
+        .footer-container { background-color: var(--ml-branco); padding-top: 24px; border-top: 1px solid #ddd; }
+        .footer-app-banner { background-color: var(--ml-amarelo); padding: 16px; display: flex; align-items: center; gap: 16px; }
+        .footer-app-banner img { width: 48px; height: 48px; }
+        .footer-app-banner span { font-size: 16px; font-weight: 500; }
+        .footer-links { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px 16px; }
+        .footer-links ul { list-style: none; margin: 0; padding: 0; }
+        .footer-links li { margin-bottom: 16px; }
+        .footer-links a { font-size: 14px; color: var(--ml-preto); }
+        .footer-auth-links { border-top: 1px solid var(--ml-cinza-fundo); padding: 16px; display: flex; gap: 16px; font-size: 14px; }
+        .footer-legal { background-color: var(--ml-cinza-fundo); padding: 24px 16px; font-size: 12px; color: var(--ml-cinza-escuro); }
+        .footer-legal a { font-size: 12px; color: var(--ml-cinza-escuro); }
+        .footer-legal p { margin: 8px 0 0 0; }
+    </style>
+</head>
+<body>
+      <!-- TELA DE CARREGAMENTO (AMARELA) -->
+    <div class="loading-overlay page-section hidden" id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- TELA DE CHECKOUT POR ETAPAS -->
+    <div class="page-section hidden" id="checkout-screen">
+        <header class="checkout-flow-header">
+            <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.5.18/mercadolibre/logo__small.png" alt="Mercado Livre">
+        </header>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+
+        <!-- ETAPA 1: CEP -->
+        <div class="checkout-step" id="checkout-step-cep">
+            <h1>Informe seu cep:</h1>
+            <div class="form-group">
+                <input type="tel" id="checkout-cep-input" class="form-input" placeholder=" " maxlength="9">
+                <label for="checkout-cep-input" class="form-label">CEP</label>
+                <div class="form-error-message" id="checkout-cep-error"></div>
+            </div>
+            <button class="checkout-step-button" id="cep-continue-btn" disabled>Continuar</button>
+        </div>
+
+        <!-- ETAPA 2: ENDEREÇO COMPLETO -->
+        <div class="checkout-step hidden" id="checkout-step-address">
+            <h1>Onde você quer receber a compra?</h1>
+            <div class="shipping-info-card" id="shipping-info-card">
+                <!-- Conteúdo dinâmico aqui -->
+            </div>
+            <div class="form-group">
+                <input type="text" id="address-street-input" class="form-input" placeholder=" " disabled>
+                <label for="address-street-input" class="form-label">Rua e bairro</label>
+            </div>
+            <div class="form-group">
+                <input type="text" id="address-city-input" class="form-input" placeholder=" " disabled>
+                <label for="address-city-input" class="form-label">Cidade e estado</label>
+            </div>
+            <div class="form-group">
+                <input type="text" id="address-number-input" class="form-input" placeholder=" ">
+                <label for="address-number-input" class="form-label">Número</label>
+            </div>
+            <div class="form-group">
+                <input type="text" id="address-complement-input" class="form-input" placeholder=" ">
+                <label for="address-complement-input" class="form-label">Complemento (opcional)</label>
+            </div>
+            <button class="checkout-step-button" id="address-continue-btn" disabled>Continuar</button>
+        </div>
+
+        <!-- ETAPA 3: DADOS PESSOAIS -->
+        <div class="checkout-step hidden" id="checkout-step-person">
+            <h1>Quem receberá a compra?</h1>
+            <div class="form-group">
+                <input type="text" id="person-name-input" class="form-input" placeholder=" ">
+                <label for="person-name-input" class="form-label">Nome completo</label>
+            </div>
+            <div class="form-group">
+                <input type="tel" id="person-cpf-input" class="form-input" placeholder=" ">
+                <label for="person-cpf-input" class="form-label">CPF</label>
+                <div class="form-error-message" id="person-cpf-error"></div>
+            </div>
+            <div class="form-group"> 
+              <input type="email" id="person-email-input" class="form-input" placeholder=" ">
+                <label for="person-email-input" class="form-label">E-mail</label>
+                <div class="form-error-message" id="person-email-error"></div>
+            </div>
+            <button class="checkout-step-button" id="person-continue-btn" disabled>Continuar</button>
+        </div>
+
+        <!-- ETAPA 4: PAGAMENTO PIX -->
+        <div class="checkout-step hidden" id="checkout-step-payment">
+            <h1>Pague com Pix</h1>
+            <div class="pix-payment-container">
+                <p>Escaneie o QR code ou copie o código para pagar.</p>
+                <div class="qr-code-placeholder">QR Code</div>
+                <p><strong>Total: R$ 9.000,00</strong></p>
+                <div class="pix-code-container" id="pix-code">
+                    00020126510014BR.GOV.BCB.PIX0129autopecadesmanche24@gmail.com52040000530398654079000.005802BR5922COMERCIO AUTO DESMONTE6011CRED DETRAN62200516MOTORJEEPCOMPASS6304B2BF
+                </div>
+                <button class="checkout-step-button copy-code-button" id="copy-code-btn">Copiar código</button>
+                <p class="post-payment-info">
+                    Após a confirmação do pagamento, você receberá o código de rastreio por e-mail para acompanhar sua entrega.
+                </p>
+            </div>
+        </div>
+    </div>
+        <!-- TELA PRINCIPAL DO PRODUTO -->
+    <div class="page-section" id="product-screen">
+        <!-- Modal de CEP (da página principal) -->
+        <div class="cep-modal-overlay" id="cep-modal-overlay">
+            <div class="cep-modal-content">
+                <h3>Informe um CEP para calcular o frete</h3>
+                <input type="tel" class="cep-modal-input" id="cep-modal-input" placeholder="00000-000" maxlength="9">
+                <div class="cep-error-message" id="cep-error-message"></div>
+                <button class="cep-modal-button" id="cep-modal-button">Usar</button>
+            </div>
+        </div>
+
+        <header class="app-banner">
+            <div class="app-banner-content">
+                <img class="app-banner-icon" src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.5.18/mercadolibre/modal-logo-120x120.jpg" alt="Mercado Libre App Icon">
+                <div class="app-text">
+                    <p class="title">Instale o app e compre de um jeito mais fácil e rápido</p>
+                </div>
+            </div>
+            <button class="install-button">Instalar</button>
+        </header>
+
+        <header class="header-amarelo">
+            <div class="header-content">
+                <img class="ml-logo" src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.5.18/mercadolibre/logo__small.png" alt="Mercado Livre">
+                <div class="search-bar">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+                    <input class="search-input" type="text" placeholder="Buscar produtos...">
+                </div>
+                <div class="cart-container" id="cart-container">
+                    <svg class="cart-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
+                    <span class="cart-count" id="cart-count"></span>
+                </div>
+            </div>
+        </header>
+        <div class="cep-bar" id="cep-bar">
+            <div class="cep-content" id="cep-content">
+                <svg class="cep-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></svg>
+                <span id="cep-text">Informe seu CEP</span>
+            </div>
+        </div>
+
+        <main class="main-container">
+            <section class="gallery-section">
+                <div class="gallery-container" id="gallery-container">
+                    <div class="gallery-track" id="gallery-track">
+                        <!-- IMAGENS PRONTAS PARA VOCÊ COLAR O LINK -->
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://img.olx.com.br/images/23/234527453813242.jpg" alt="Imagem 1 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_905062-MLA92148496583_092025-B.webp" alt="Imagem 2 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_608213-MLA92148476745_092025-B.webp" alt="Imagem 3 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_805948-MLA91747611572_092025-B.webp" alt="Imagem 4 do Produto"></div>
+                        <div class="image-slide"><img class="main-image-placeholder" src="https://http2.mlstatic.com/D_Q_NP_663681-MLA91747591844_092025-B.webp" alt="Imagem 5 do Produto"></div>
+                    </div>
+                </div>
+                <div class="gallery-dots" id="gallery-dots">
+                    <span class="dot active" data-index="0"></span>
+                    <span class="dot" data-index="1"></span>
+                    <span class="dot" data-index="2"></span>
+                    <span class="dot" data-index="3"></span>
+                    <span class="dot" data-index="4"></span>
+                </div>
+            </section>
+
+            <section class="card-section title-section">
+                <h1 class="product-title">Motor Jeep Compass 2020 2.0 Flex</h1>
+            </section>
+
+            <section class="card-section price-section">
+                <p class="original-price">R$  11.100,78</p>
+                <div class="price-line">
+                    <span class="current-price">R$ 9.000,00</span>
+                    <span class="discount">18,92% OFF</span>
+                </div>
+                <p class="installments">Descontos aplicado pagamento à vista no pix.</p>
+            </section>
+        </main>
+        
+        <section class="action-buttons-section">
+            <button class="btn btn-buy" id="buy-now-btn">Comprar agora</button>
+            <button class="btn btn-add-to-cart" id="add-to-cart-btn">Adicionar ao carrinho</button>
+        </section>
+        <div class="main-container">
+            <section class="card-section seller-section">
+                <h2 class="card-title">Informações da loja</h2>
+                <div class="seller-info">
+                    <div class="seller-logo-placeholder">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbvSN0j_ajE23f0n9IJsrrmzojtGFHBYlbAd81zqt3A9COtmpGdkf9oe0R&s=10" alt="Logo Mercado Livre">
+                    </div>
+                    <div>
+                        <p class="shop-name">Mercado Livre</p>
+                        <p class="leader-badge">
+                            <svg class="leader-icon" width="16" height="16" viewBox="0 0 16 16"><path d="M14.7 6.2c.3.6.2 1.3-.3 1.7l-1.8 1.5c.2.7.2 1.4 0 2.1l1.8 1.5c.5.4.6 1.1.3 1.7l-1.1 1.9c-.3.6-1 .8-1.6.5l-2.1-1c-.5.4-1.1.7-1.7-.9V18c0 .7-.6 1.2-1.2 1.2h-2c-.7 0-1.2-.5-1.2-1.2v-1.9c-.6-.2-1.2-.5-1.7-.9l-2.1 1c-.6.3-1.3.1-1.6-.5l-1.1-1.9c-.3-.6-.2-1.3.3-1.7l1.8-1.5c-.2-.7-.2-1.4 0-2.1L.8 7.9c-.5-.4-.6-1.1-.3-1.7L1.6 4.3c.3-.6 1-.8 1.6-.5l2.1 1c.5-.4 1.1-.7 1.7-.9V2c0-.7.6-1.2 1.2-1.2h2c.7 0 1.2.5 1.2 1.2v1.9c.6.2 1.2.5 1.7.9l2.1-1c.6.3 1.3.1 1.6.5l1.1 1.9z"></path></svg>
+                            <span>VENDIDO POR MERCADO LIVRE</span>
+                        </p>
+                    </div>
+                </div>
+            </section>
+            <section class="card-section questions-section">
+                <h2 class="card-title">Perguntas e respostas</h2>
+                <div class="suggestion-buttons">
+                    <button class="suggestion-btn">Custo e prazo de envio</button>
+                    <button class="suggestion-btn">Devoluções grátis</button>
+                    <button class="suggestion-btn">Meios de pagamento</button>
+                    <button class="suggestion-btn">Garantia</button>
+                </div>
+            </section>
+
+            <section class="card-section reviews-section">
+                <h2 class="card-title">Opiniões do produto</h2>
+                <div class="reviews-summary">
+                    <div class="avg-rating">4.8</div>
+                    <div>
+                        <div class="stars">
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                        </div>
+                        <div class="total-reviews">17 avaliações</div>
+                    </div>
+                </div>
+                <div class="rating-bars">
+                    <div class="rating-bar-row"><span class="star-label">5</span><div class="bar-container"><div class="bar-fill" style="width: 85%;"></div></div></div>
+                    <div class="rating-bar-row"><span class="star-label">4</span><div class="bar-container"><div class="bar-fill" style="width: 10%;"></div></div></div>
+                    <div class="rating-bar-row"><span class="star-label">3</span><div class="bar-container"><div class="bar-fill" style="width: 3%;"></div></div></div>
+                    <div class="rating-bar-row"><span class="star-label">2</span><div class="bar-container"><div class="bar-fill" style="width: 1%;"></div></div></div>
+                    <div class="rating-bar-row"><span class="star-label">1</span><div class="bar-container"><div class="bar-fill" style="width: 1%;"></div></div></div>
+                </div>
+                <div class="reviews-with-photos">
+                    <h3 style="font-size: 16px; font-weight: 400; margin-top: 24px;">Opiniões com fotos</h3>
+                    <div class="review-comment">
+                        <div class="stars">
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                        </div>
+                        <p class="comment-title">⭐ Excelente qualidade!</p>
+                        <p class="comment-text">Comprei esse motor pro meu Compass e chegou tudo certinho. Está bem conservado e funcionando perfeitamente depois da instalação. Recomendo!</p>
+                        <p class="comment-author">Maria S. - há 2 meses</p>
+                    </div>
+                    <div class="review-comment">
+                        <div class="stars">
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                        </div>
+                        <p class="comment-title">⭐ Vale cada centavo!</p>
+                        <p class="comment-text">Produto veio do jeito que foi anunciado. Meu mecânico aprovou o estado do motor, ligou de primeira. Ótima compra.</p>
+                        <p class="comment-author">João P. - há 1 mês</p>
+                    </div>
+                    <div class="review-comment">
+                        <div class="stars">
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                            <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                        </div>
+                        <p class="comment-title">⭐ Chegou  muito rapido satisfeita!</p>
+                        <p class="comment-text">Motor muito bom, já estou usando no meu Jeep e ficou zero. Valeu a pena, vendedor confiável e envio rápido.Uma ótima escolha! Satisfeita com a compra.</p>
+                        <p class="comment-author">Ana L. - há 2 dias</p>
+                    </div>
+                    <a href="#" class="link-azul">Mostrar todas as opiniões</a>
+                </div>
+            </section>
+        </div>
+
+        <section class="recommendations-section">
+            <h2 class="card-title">Quem comprou este produto também comprou</h2>
+            <div class="product-grid">
+                <a href="#" class="reco-product">
+                    <div class="reco-image-placeholder"></div>
+                    <div class="price">R$ 220</div>
+                    <div class="installments">10x R$ 22,00 sem juros</div>
+                    <div class="title">All star 2023</div>
+                </a>
+                <a href="#" class="reco-product">
+                  <div class="reco-image-placeholder"></div>
+                    <div class="price">R$ 380</div>
+                    <div class="installments">10x R$ 38,00 sem juros</div>
+                    <div class="title">AOKULASIC-Relógio de pulso de quartzo</div>
+                </a>
+                <a href="#" class="reco-product">
+                    <div class="reco-image-placeholder"></div>
+                    <div class="price">R$ 89</div>
+                    <div class="installments">em 3x R$ 29,67 sem juros</div>
+                    <div class="title">Fone de Ouvido Bluetooth Sem Fio</div>
+                </a>
+            </div>
+        </section>
+
+        <div class="ad-info">
+            <span>Anúncio #3505329610</span> | <a href="#">Denunciar</a>
+        </div>
+
+        <footer class="footer-container">
+            <div class="footer-app-banner">
+                <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/6.5.18/mercadolibre/logo__small.png" alt="Mercado Livre App Icon">
+                <span>Compre e venda com o app!</span>
+            </div>
+            <div class="footer-links">
+                <ul>
+                    <li><a href="#">Minha conta</a></li>
+                    <li><a href="#">Histórico</a></li>
+                    <li><a href="#">Favoritos</a></li>
+                    <li><a href="#">Categorias</a></li>
+                    <li><a href="#">Contato</a></li>
+                </ul>
+                <ul>
+                    <li><a href="#">Compras</a></li>
+                    <li><a href="#">Ofertas do dia</a></li>
+                    <li><a href="#">Lojas oficiais</a></li>
+                    <li><a href="#">Meli+</a></li>
+                    <li><a href="#">Vender</a></li>
+                </ul>
+            </div>
+            <div class="footer-auth-links">
+                <a href="#">Entre</a>
+                <a href="#">Crie a sua conta</a>
+            </div>
+            <div class="footer-legal">
+                <a href="#">Termos e condições</a> <a href="#">Como cuidamos da sua privacidade</a> <a href="#">Acessibilidade</a> <a href="#">Informações sobre seguros</a>
+                <p>© 1999-2024 Ebazar.com.br LTDA.</p>
+                <p>CNPJ n.º 03.007.331/0001-41 / Av. das Nações Unidas, nº 3.003, Bonfim, Osasco/SP - CEP 06233-903 - empresa do grupo Mercado Livre.</p>
+            </div>
+        </footer>
+    </div>
+    <script>
+        // --- MAPEAMENTO DE ELEMENTOS ---
+        const productScreen = document.getElementById('product-screen');
+        const checkoutScreen = document.getElementById('checkout-screen');
+        const loadingScreen = document.getElementById('loading-screen');
+        const body = document.body;
+
+        const buyNowBtn = document.getElementById('buy-now-btn');
+        const addToCartBtn = document.getElementById('add-to-cart-btn');
+        const cartCount = document.getElementById('cart-count');
+
+        // Elementos do Carrossel
+        const galleryContainer = document.getElementById('gallery-container');
+        const galleryTrack = document.getElementById('gallery-track');
+        const dotsContainer = document.getElementById('gallery-dots');
+        const dots = document.querySelectorAll('.dot');
+        const slides = document.querySelectorAll('.image-slide');
+        const slideCount = slides.length;
+
+        // Elementos do Modal de CEP (Página Principal)
+        const cepBar = document.getElementById('cep-bar');
+        const cepModalOverlay = document.getElementById('cep-modal-overlay');
+        const cepModalInput = document.getElementById('cep-modal-input');
+        const cepModalButton = document.getElementById('cep-modal-button');
+        const cepErrorMessage = document.getElementById('cep-error-message');
+        const cepText = document.getElementById('cep-text');
+
+        // Elementos do Fluxo de Checkout
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const checkoutSteps = {
+            cep: document.getElementById('checkout-step-cep'),
+            address: document.getElementById('checkout-step-address'),
+            person: document.getElementById('checkout-step-person'),
+            payment: document.getElementById('checkout-step-payment')
+        };
+        
+        // --- Variáveis de Estado ---
+        let currentSlide = 0;
+        let isDragging = false;
+        let startPos = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+        let animationID = 0;
+        let userAddressData = null; // Armazena os dados do CEP
+
+        // --- LÓGICA DO CARRINHO ---
+        addToCartBtn.addEventListener('click', () => {
+            cartCount.style.display = 'flex';
+            let currentCount = parseInt(cartCount.innerText) || 0;
+            cartCount.innerText = currentCount + 1;
+        });
+
+        // --- LÓGICA DO CARROSSEL DE IMAGENS (SWIPE) ---
+        galleryContainer.addEventListener('mousedown', dragStart);
+        galleryContainer.addEventListener('touchstart', dragStart);
+        galleryContainer.addEventListener('mouseup', dragEnd);
+        galleryContainer.addEventListener('touchend', dragEnd);
+        galleryContainer.addEventListener('mouseleave', dragEnd);
+        galleryContainer.addEventListener('mousemove', drag);
+        galleryContainer.addEventListener('touchmove', drag);
+
+        function dragStart(event) {
+            isDragging = true;
+            startPos = getPositionX(event);
+            animationID = requestAnimationFrame(animation);
+            galleryContainer.style.cursor = 'grabbing';
+        }
+
+        function drag(event) {
+            if (isDragging) {
+                const currentPosition = getPositionX(event);
+                currentTranslate = prevTranslate + currentPosition - startPos;
+            }
+        }
+
+        function dragEnd() {
+            cancelAnimationFrame(animationID);
+            isDragging = false;
+            const movedBy = currentTranslate - prevTranslate;
+
+            if (movedBy < -100 && currentSlide < slideCount - 1) currentSlide++;
+            if (movedBy > 100 && currentSlide > 0) currentSlide--;
+
+            setPositionByIndex();
+            galleryContainer.style.cursor = 'grab';
+        }
+
+        function getPositionX(event) {
+            return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
+        }
+
+        function animation() {
+            setSliderPosition();
+            if (isDragging) requestAnimationFrame(animation);
+        }
+
+        function setSliderPosition() {
+            galleryTrack.style.transform = `translateX(${currentTranslate}px)`;
+        }
+
+        function setPositionByIndex() {
+            currentTranslate = currentSlide * -galleryContainer.clientWidth;
+            prevTranslate = currentTranslate;
+            setSliderPosition();
+            updateDots();
+        }
+
+        function updateDots() {
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[currentSlide].classList.add('active');
+        }
+
+        dotsContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('dot')) {
+                currentSlide = parseInt(event.target.dataset.index);
+                setPositionByIndex();
+            }
+        });
+        
+        window.addEventListener('resize', setPositionByIndex);
+
+
+        // --- LÓGICA DO MODAL DE CEP (PÁGINA PRINCIPAL) ---
+        cepBar.addEventListener('click', () => cepModalOverlay.style.display = 'flex');
+        cepModalOverlay.addEventListener('click', (e) => {
+            if (e.target === cepModalOverlay) cepModalOverlay.style.display = 'none';
+        });
+        cepModalInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+        });
+        cepModalButton.addEventListener('click', () => {
+            const cep = cepModalInput.value;
+            if (cep.length !== 9) {
+                cepErrorMessage.textContent = 'Digite um CEP válido.';
+                return;
+            }
+            cepErrorMessage.textContent = '';
+            cepText.textContent = `Frete grátis para ${cep}`;
+            cepModalOverlay.style.display = 'none';
+        });
+
+        // --- LÓGICA DO FLUXO DE CHECKOUT ---
+        function showLoading(duration, callback) {
+            loadingScreen.classList.remove('hidden');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                if (callback) callback();
+            }, duration);
+          }
+
+        function showStep(stepId) {
+            Object.values(checkoutSteps).forEach(step => step.classList.add('hidden'));
+            checkoutSteps[stepId].classList.remove('hidden');
+            
+            let progress = 0;
+            if (stepId === 'cep') progress = 10;
+            if (stepId === 'address') progress = 40;
+            if (stepId === 'person') progress = 70;
+            if (stepId === 'payment') progress = 100;
+            progressBarFill.style.width = `${progress}%`;
+        }
+
+        buyNowBtn.addEventListener('click', () => {
+            showLoading(2000, () => {
+                productScreen.classList.add('hidden');
+                checkoutScreen.classList.remove('hidden');
+                body.classList.add('checkout-active');
+                showStep('cep');
+            });
+        });
+
+        // Validação e transição da Etapa 1 (CEP)
+        const checkoutCepInput = document.getElementById('checkout-cep-input');
+        const cepContinueBtn = document.getElementById('cep-continue-btn');
+        checkoutCepInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+            e.target.value = value;
+            cepContinueBtn.disabled = value.length !== 9;
+        });
+        cepContinueBtn.addEventListener('click', () => {
+            cepContinueBtn.textContent = 'Buscando...';
+            cepContinueBtn.disabled = true;
+            fetch(`https://viacep.com.br/ws/${checkoutCepInput.value.replace('-', '')}/json/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.erro) {
+                        document.getElementById('checkout-cep-error').textContent = 'CEP não encontrado.';
+                        cepContinueBtn.textContent = 'Continuar';
+                        return;
+                    }
+                    userAddressData = data;
+                    document.getElementById('shipping-info-card').innerHTML = `
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 8h-3V4h3v4zM4 8h3V4H4v4zm16 8v-2h-3v2h3zm-5-2h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H4v2h3v-2zM21 2H3c-.55 0-1 .45-1 1v18c0 .55.45 1 1 1h18c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 18H4V4h16v16z"></path></svg>
+                        <div>
+                            <p>${data.logradouro}, ${data.bairro} - ${data.localidade}, ${data.uf}</p>
+                            <p class="free-shipping">Chegará hoje mesmo. Frete grátis!</p>
+                        </div>
+                    `;
+                    document.getElementById('address-street-input').value = `${data.logradouro}, ${data.bairro}`;
+                    document.getElementById('address-city-input').value = `${data.localidade} - ${data.uf}`;
+                    showLoading(2000, () => showStep('address'));
+                })
+                .catch(err => {
+                    document.getElementById('checkout-cep-error').textContent = 'Erro ao buscar CEP.';
+                })
+                .finally(() => {
+                    cepContinueBtn.textContent = 'Continuar';
+                });
+        });
+
+        // Validação e transição da Etapa 2 (Endereço)
+        const addressNumberInput = document.getElementById('address-number-input');
+        const addressContinueBtn = document.getElementById('address-continue-btn');
+        addressNumberInput.addEventListener('input', () => {
+            addressContinueBtn.disabled = addressNumberInput.value.trim() === '';
+        });
+        addressContinueBtn.addEventListener('click', () => showLoading(2000, () => showStep('person')));
+
+        // Validação e transição da Etapa 3 (Dados Pessoais)
+        const personNameInput = document.getElementById('person-name-input');
+        const personCpfInput = document.getElementById('person-cpf-input');
+        const personEmailInput = document.getElementById('person-email-input');
+        const personContinueBtn = document.getElementById('person-continue-btn');
+        [personNameInput, personCpfInput, personEmailInput].forEach(input => {
+            input.addEventListener('input', () => {
+                const isNameValid = personNameInput.value.trim().length > 2;
+                const isCpfValid = personCpfInput.value.replace(/\D/g, '').length === 11;
+                const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personEmailInput.value);
+                personContinueBtn.disabled = !(isNameValid && isCpfValid && isEmailValid);
+            });
+        });
+        personCpfInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            e.target.value = v.slice(0, 14);
+        });
+        personContinueBtn.addEventListener('click', () => showLoading(2000, () => showStep('payment')));
+
+        // Lógica da Etapa 4 (Pagamento)
+        const copyCodeBtn = document.getElementById('copy-code-btn');
+        copyCodeBtn.addEventListener('click', () => {
+            const pixCode = document.getElementById('pix-code').textContent.trim();
+            navigator.clipboard.writeText(pixCode).then(() => {
+                copyCodeBtn.textContent = 'Código Copiado!';
+                setTimeout(() => {
+                    copyCodeBtn.textContent = 'Copiar código';
+                }, 2000);
+            });
+        });
+
+    </script>
+</body>
+</html>
